@@ -1,0 +1,16 @@
+{
+  "by_extension": {
+    ".heic": "Images/Phone/HEIC",
+    ".pdf": "Documents/PDFs"
+  },
+  "by_glob": {
+    "**/iPhone/**": "Images/Phone",
+    "**/Scans/**": "Documents/Scans"
+  },
+  "by_exif": {
+    "camera_to": {
+      "Canon": "Images/RAW/{camera}",
+      "NIKON": "Images/RAW/{camera}"
+    }
+  }
+}

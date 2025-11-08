@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Project specific
+*.sqlite3
+*.db
+reports/
+scan_reports/
+*.jsonl
+*.log
+
+# Backup files
+*_backup.py
+*_patched.py
+.*_toolkit.py
+*.zip
+
+# Output folders
+organized/
+quarantine/
+backup/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

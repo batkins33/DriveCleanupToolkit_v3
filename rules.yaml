@@ -1,0 +1,9 @@
+
+- name: Family Photos 2018
+  include: ["**/Photos/2018/**", "**/*2018*.*"]
+  tags: ["photos","family","2018"]
+
+- name: Work Docs
+  include: ["**/Projects/**", "**/*.doc", "**/*.docx", "**/*.pdf", "**/*.ppt", "**/*.pptx"]
+  exclude: ["**/_Trash/**", "**/node_modules/**"]
+  tags: ["work","docs"]

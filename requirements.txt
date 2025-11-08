@@ -1,0 +1,19 @@
+# Core dependencies for Drive Cleanup Toolkit v3
+
+# Image processing and EXIF data
+Pillow>=10.0.0
+
+# Perceptual image hashing for near-duplicate detection
+imagehash>=4.3.0
+
+# PDF text extraction for document deduplication
+pdfminer.six>=20221105
+
+# Microsoft Word document processing
+python-docx>=1.0.0
+
+# Fuzzy hashing for near-duplicate detection
+py-tlsh>=4.7.0
+
+# Optional: PyYAML for better YAML parsing (currently using basic parsing)
+# PyYAML>=6.0
