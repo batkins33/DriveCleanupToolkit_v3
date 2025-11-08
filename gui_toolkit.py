@@ -19,6 +19,7 @@ import webbrowser
 import time
 import shlex
 import logging
+import csv
 
 # --- Windows HiDPI hint (no-op elsewhere) ---
 try:
@@ -80,11 +81,21 @@ def apply_theme(root, theme):
         pass
 
     if theme == "dark":
-        bg = "#0f1115"; fg = "#e6e6e6"; panel = "#171a21"; sub = "#a0a8b8"
-        entry_bg = "#10131a"; border = "#2a2f3a"; accent = "#3b82f6"
+        bg = "#0f1115"
+        fg = "#e6e6e6"
+        panel = "#171a21"
+        sub = "#a0a8b8"
+        entry_bg = "#10131a"
+        border = "#2a2f3a"
+        accent = "#3b82f6"
     else:
-        bg = "#fafafa"; fg = "#1f2937"; panel = "#ffffff"; sub = "#4b5563"
-        entry_bg = "#ffffff"; border = "#e5e7eb"; accent = "#2563eb"
+        bg = "#fafafa"
+        fg = "#1f2937"
+        panel = "#ffffff"
+        sub = "#4b5563"
+        entry_bg = "#ffffff"
+        border = "#e5e7eb"
+        accent = "#2563eb"
 
     root.configure(bg=bg)
     s.configure(".", background=bg, foreground=fg)
@@ -460,9 +471,12 @@ class DriveCleanupGUI:
 
         grid = ttk.Frame(cfg)
         grid.pack(fill=tk.X, pady=4)
-        self.p_src = tk.StringVar(); self.p_dst = tk.StringVar()
-        self.p_tagsj = tk.StringVar(); self.p_tags = tk.StringVar()
-        self.p_over = tk.StringVar(); self.p_out = tk.StringVar()
+        self.p_src = tk.StringVar()
+        self.p_dst = tk.StringVar()
+        self.p_tagsj = tk.StringVar()
+        self.p_tags = tk.StringVar()
+        self.p_over = tk.StringVar()
+        self.p_out = tk.StringVar()
         self.p_pres = tk.BooleanVar(value=True)
 
         self.mk_row(grid, "Source:", self.p_src, self.pick_dir, row=0, pref_key="preview_source")
@@ -573,6 +587,10 @@ class DriveCleanupGUI:
         self.btn_undo.pack(side=tk.LEFT, padx=4)
 
         for v in (self.u_log, self.u_bak):
+            v.trace_add("write", lambda *_: self.update_undo_buttons()) style="Accent.TButton")
+        self.btn_undo.pack(side=tk.LEFT, padx=4)
+
+        for v in (self.u_log, self.u_bak):
             v.trace_add("write", lambda *_: self.update_undo_buttons())
 
     # ---------------------------
@@ -641,7 +659,8 @@ class DriveCleanupGUI:
             os.startfile(str(safe_path))
         except (OSError, ValueError) as e:
             try:
-                webbrowser.open(f"file://{safe_path.as_uri()}")
+                fallback_path = Path(filename).resolve()
+                webbrowser.open(fallback_path.as_uri())
             except Exception:
                 messagebox.showerror("Error", f"Could not open file: {e}")
 
@@ -949,7 +968,9 @@ class DriveCleanupGUI:
                     writer.writeheader()
                     writer.writerows(self.current_data)
                 messagebox.showinfo("Success", f"Exported {len(self.current_data)} rows to {safe_path.name}")
-            except (OSError, UnicodeEncodeError, csv.Error) as e:
+            except (OSError, UnicodeEncodeError) as e:
+                messagebox.showerror("Error", f"Export failed: {e}")
+            except Exception as e:
                 messagebox.showerror("Error", f"Export failed: {e}")
 
     def apply_filter(self):
