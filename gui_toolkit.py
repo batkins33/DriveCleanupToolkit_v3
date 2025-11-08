@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
 # Drive Cleanup Toolkit v3 — Upgraded GUI (CommandRunner + Details Pane + Cancel/Busy + Shortcuts + Prefs)
 # This file replaces the previous gui_toolkit.py while preserving CLI contract.
-# Created by ChatGPT on 2025-11-07
 
 import os
 # Fix Unicode encoding issue on Windows
@@ -587,23 +585,13 @@ class DriveCleanupGUI:
         self.btn_undo.pack(side=tk.LEFT, padx=4)
 
         for v in (self.u_log, self.u_bak):
-            v.trace_add("write", lambda *_: self.update_undo_buttons()) style="Accent.TButton")
-        self.btn_undo.pack(side=tk.LEFT, padx=4)
-
-        for v in (self.u_log, self.u_bak):
             v.trace_add("write", lambda *_: self.update_undo_buttons())
-
-    # ---------------------------
-    # Shared widgets / helpers
-    # ---------------------------
 
     def mk_row(self, parent, label, var, picker, row=0, pref_key=None):
         ttk.Label(parent, text=label).grid(row=row, column=0, sticky="w", pady=5)
         e = ttk.Entry(parent, textvariable=var, width=62)
         e.grid(row=row, column=1, padx=5, sticky="we")
         ttk.Button(parent, text="Browse...", command=lambda v=var, k=pref_key: self._pick_and_persist(v, picker, k)).grid(row=row, column=2, padx=2)
-
-        # load last path if empty
         if pref_key and not var.get():
             last = self.prefs.get("last_paths", {}).get(pref_key)
             if last:
@@ -631,11 +619,10 @@ class DriveCleanupGUI:
             var.set(f)
 
     def _initial_for(self, var):
-        # pick a sensible initial dir from the current value or prefs
         val = var.get().strip()
         if val:
             try:
-                p = Path(val).resolve()  # Resolve to prevent path traversal
+                p = Path(val).resolve()
                 if p.is_dir():
                     return str(p)
                 elif p.parent.exists():
@@ -651,7 +638,6 @@ class DriveCleanupGUI:
 
     def open_file(self, filename):
         try:
-            # Validate and sanitize file path
             safe_path = Path(filename).resolve()
             if not safe_path.exists():
                 messagebox.showerror("Error", f"File not found: {filename}")
@@ -677,10 +663,6 @@ class DriveCleanupGUI:
         self.status_var.set(message)
         self.root.update_idletasks()
 
-    # ---------------------------
-    # Busy / Cancel
-    # ---------------------------
-
     def set_busy(self, is_busy: bool, label="Working…"):
         targets = [getattr(self, n) for n in ("btn_scan","btn_prev","btn_org","btn_ded","btn_undo") if hasattr(self, n)]
         for b in targets:
@@ -698,16 +680,10 @@ class DriveCleanupGUI:
         self.set_busy(False, label="Canceled")
         show_toast(self.root, "Canceled", theme=self.theme)
 
-    # ---------------------------
-    # Commands (use CommandRunner)
-    # ---------------------------
-
     def run_scan(self):
         if not self.s_src.get() or not self.s_out.get():
             messagebox.showerror("Error", "Please specify source and output folders")
             return
-        
-        # Validate paths
         try:
             src_path = Path(self.s_src.get()).resolve()
             out_path = Path(self.s_out.get()).resolve()
@@ -717,7 +693,6 @@ class DriveCleanupGUI:
         except (OSError, ValueError) as e:
             messagebox.showerror("Error", f"Invalid path: {e}")
             return
-            
         cmd = [PY, "scan_storage.py", str(src_path), "--out", str(out_path)]
         if self.v_ph.get(): cmd.append("--image-phash")
         if self.v_tx.get(): cmd.append("--text-hash")
@@ -729,8 +704,6 @@ class DriveCleanupGUI:
         if not self.p_src.get() or not self.p_dst.get() or not self.p_out.get():
             messagebox.showerror("Error", "Please specify source, destination, and output file")
             return
-        
-        # Validate paths
         try:
             src_path = Path(self.p_src.get()).resolve()
             dst_path = Path(self.p_dst.get()).resolve()
@@ -738,7 +711,6 @@ class DriveCleanupGUI:
         except (OSError, ValueError) as e:
             messagebox.showerror("Error", f"Invalid path: {e}")
             return
-            
         cmd = [PY, "move_preview_report.py", "--mode", self.preview_mode.get(),
                "--source", str(src_path), "--dest", str(dst_path), "--out", str(out_path)]
         if self.preview_mode.get() == "tags":
@@ -770,15 +742,12 @@ class DriveCleanupGUI:
             return
         if messagebox.askyesno("Confirm", "Proceed with organizing? Run DRY RUN first to preview.") is False:
             return
-        
-        # Validate paths
         try:
             src_path = Path(self.o_src.get()).resolve()
             dst_path = Path(self.o_dst.get()).resolve()
         except (OSError, ValueError) as e:
             messagebox.showerror("Error", f"Invalid path: {e}")
             return
-            
         cmd = [PY, "drive_organizer.py", "organize", "--source", str(src_path), "--dest", str(dst_path)]
         if self.o_over.get():
             try:
@@ -798,8 +767,6 @@ class DriveCleanupGUI:
             return
         if messagebox.askyesno("Confirm", "Proceed with deduplication? DRY RUN is recommended.") is False:
             return
-        
-        # Validate paths
         try:
             rep_path = Path(self.d_rep.get()).resolve()
             qua_path = Path(self.d_qua.get()).resolve()
@@ -809,7 +776,6 @@ class DriveCleanupGUI:
         except (OSError, ValueError) as e:
             messagebox.showerror("Error", f"Invalid path: {e}")
             return
-            
         cmd = [PY, "drive_organizer.py", "dedupe", "--report", str(rep_path),
                "--quarantine", str(qua_path), "--keeper", self.d_keep.get(),
                "--link-mode", self.d_mode.get()]
@@ -821,8 +787,6 @@ class DriveCleanupGUI:
         if not self.u_log.get():
             messagebox.showerror("Error", "Please specify undo log file")
             return
-        
-        # Validate paths
         try:
             log_path = Path(self.u_log.get()).resolve()
             if not log_path.exists():
@@ -831,7 +795,6 @@ class DriveCleanupGUI:
         except (OSError, ValueError) as e:
             messagebox.showerror("Error", f"Invalid log file path: {e}")
             return
-            
         cmd = [PY, "undo_moves.py", "--log", str(log_path)]
         if self.u_bak.get():
             try:
@@ -844,10 +807,6 @@ class DriveCleanupGUI:
         self.set_busy(True, label="Undoing…")
         self.runner.run(cmd)
 
-    # ---------------------------
-    # Command completion
-    # ---------------------------
-
     def _on_cmd_done(self, result):
         tag, val = result
         self.set_busy(False)
@@ -855,7 +814,6 @@ class DriveCleanupGUI:
             if val == 0:
                 show_toast(self.root, "Completed", theme=self.theme)
                 self.set_status("✓ Completed")
-                # On successful scan, try to autoload latest report
                 self.auto_load_latest_report()
             else:
                 self.set_status(f"Failed (exit {val})")
@@ -864,10 +822,6 @@ class DriveCleanupGUI:
             messagebox.showerror("Error", val)
             self.set_status("Error")
 
-    # ---------------------------
-    # Results helpers
-    # ---------------------------
-
     def load_report(self):
         file = filedialog.askopenfilename(filetypes=[("JSONL files", "*.jsonl"), ("All files", "*.*")])
         if file:
@@ -875,12 +829,10 @@ class DriveCleanupGUI:
 
     def load_report_file(self, filepath):
         try:
-            # Validate and sanitize file path
             safe_path = Path(filepath).resolve()
             if not safe_path.exists():
                 messagebox.showerror("Error", f"Report file not found: {filepath}")
                 return
-                
             self.set_status(f"Loading {safe_path.name}...")
             self.current_data = []
             dup_map = {}
@@ -892,14 +844,10 @@ class DriveCleanupGUI:
                         sha = rec.get("sha256")
                         if sha:
                             dup_map.setdefault(sha, []).append(rec)
-
-            # clear tree
             for item in self.results_tree.get_children():
                 self.results_tree.delete(item)
-
             total_size = 0
             dup_count = 0
-
             for rec in self.current_data:
                 path = rec.get("path", "")
                 size = rec.get("size_human", "")
@@ -911,7 +859,6 @@ class DriveCleanupGUI:
                     dup_count += 1
                 total_size += rec.get("size", 0)
                 self.results_tree.insert("", "end", values=(path, size, mtime, sha_short, dup_cnt if dup_cnt > 1 else ""))
-
             file_count = len(self.current_data)
             dup_groups = sum(1 for v in dup_map.values() if len(v) > 1)
             stats = f"Files: {file_count:,} | Total Size: {self.human_size(total_size)} | Duplicates: {dup_count:,} ({dup_groups} groups)"
@@ -934,16 +881,13 @@ class DriveCleanupGUI:
         self.detail_vars["dup_count"].set(vals[4] if vals[4] else "—")
 
     def auto_load_latest_report(self):
-        # Try output path first; fallback to scan tab's out dir
         out_candidates = []
         if self.s_out.get():
             out_candidates.append(Path(self.s_out.get()))
-        # Try last known preview/organize locations (in case report saved there)
         for key in ("scan_output",):
             lp = self.prefs.get("last_paths", {}).get(key)
             if lp:
                 out_candidates.append(Path(lp))
-
         for out in out_candidates:
             p = out / "scan_report.jsonl"
             if p.exists():
@@ -961,15 +905,12 @@ class DriveCleanupGUI:
         file = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
         if file:
             try:
-                import csv
                 safe_path = Path(file).resolve()
                 with open(safe_path, "w", newline="", encoding="utf-8") as f:
                     writer = csv.DictWriter(f, fieldnames=self.current_data[0].keys())
                     writer.writeheader()
                     writer.writerows(self.current_data)
                 messagebox.showinfo("Success", f"Exported {len(self.current_data)} rows to {safe_path.name}")
-            except (OSError, UnicodeEncodeError) as e:
-                messagebox.showerror("Error", f"Export failed: {e}")
             except Exception as e:
                 messagebox.showerror("Error", f"Export failed: {e}")
 
@@ -1077,10 +1018,6 @@ class DriveCleanupGUI:
             bytes_ /= 1024.0
         return f"{bytes_:.2f} PB"
 
-    # ---------------------------
-    # State / validation
-    # ---------------------------
-
     def update_scan_buttons(self):
         ok = bool(self.s_src.get() and self.s_out.get())
         self.btn_scan.config(state=("normal" if ok else "disabled"))
@@ -1105,10 +1042,6 @@ class DriveCleanupGUI:
     def update_undo_buttons(self):
         ok = bool(self.u_log.get())
         self.btn_undo.config(state=("normal" if ok else "disabled"))
-
-    # ---------------------------
-    # Theme / shortcuts / lifecycle
-    # ---------------------------
 
     def toggle_theme(self):
         self.theme = "dark" if self.theme == "light" else "light"
